@@ -7,7 +7,7 @@ build_release: compile link_release clean
 build_debug: compile link_debug clean
 
 compile:
-	g++ -I src/include -c src/Main.cpp 
+	g++ -I src/include -c src/Main.cpp -O3 -Wall -Wextra
 
 link_release:
 	g++ Main.o -o bin/Release/Main.exe -L src/lib/Release -l sfml-graphics -l sfml-window -l sfml-system -mwindows
