@@ -1,4 +1,3 @@
-
 #include <cmath>
 
 class Complex {
@@ -13,11 +12,11 @@ class Complex {
 			R = _r, I = _i;
 		}
 
-		long double Modulus() {
+		long double modulus() {
 			return sqrtl(R*R + I*I);
 		}
 
-		long double ModulusSqrd() {
+		long double modulusSqrd() {
 			return R*R + I*I;
 		}
 
@@ -49,7 +48,7 @@ class Complex {
 			if (R == 0.0l && I == 0.0l) {
 				return Complex(0, 0);
 			}
-			Complex exponent = w * Complex( logl(Modulus()), atan2l(I, R) );
+			Complex exponent = w * Complex( logl(modulus()), atan2l(I, R) );
 			long double ex = expl(exponent.R);
 			long double im = exponent.I;
 

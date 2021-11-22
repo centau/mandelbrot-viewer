@@ -2,31 +2,10 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <stdlib.h>
+#include <Complex.hpp>
 
 const int THREAD_COUNT = 24;
-
-/*
-void render(fractal* fract, fractalType fract_type, sf::Image*, int startRows, int endRows) {
-      sf::Image image;
-	image.create(fract.size, fract.size, sf::Color(0, 0, 0));
-      
-      for (int screenY = 0; screenY < fract.size; screenY++) {
-            long double pi = frameToComplexCoord(screenY, fract, fract.y);
-
-            for (int screenX = 0; screenX < fract.size; screenX++) {
-                  long double pr = frameToComplexCoord(screenX, fract, fract.x);
-
-                  int i = fract_type == fractalType::mandelbrot ?
-                        testStability(pr, pi, fract.imax) :
-                        testStability(fract.zr, fract.zi, fract.imax, pr, pi);
-
-                  image.setPixel(screenX, screenY, colorPixel(i, fract.imax));
-            }
-      }
-
-      fract.texture.loadFromImage(image);
-}
-*/
 
 // Structs
 enum fractalType {
@@ -56,11 +35,6 @@ struct fractal {
       }
 };
 
-sf::Image colorImage() {
-      sf::Image x;
-      return x;
-}
-
 // Functions
 float norm(float min, float max, float z) {
 	return (z - min)/(max-min);
@@ -68,22 +42,6 @@ float norm(float min, float max, float z) {
 
 float d(float min, float max, float z) {
 	return z*(max-min) + min;
-}
-
-sf::Color colorPixel(int i, int imax) {
-	float x = (float)i / imax;
-	int c = x*255;
-
-	if (x >= 0.9) {
-		float n = norm(0.9, 1, x);
-		return sf::Color(d(0, 255, n), c, 255);
-	} else if (x > 0.2) {
-		float n = norm(0.2, 0.9, x);
-		return sf::Color(0, d(51, 229.5, n) , d(204, 255, n));
-	} else {
-		float n = norm(0, 0.2, x);
-		return sf::Color(d(0, 51, 1-n), d(0, 51, n), c*3 +51);
-	}
 }
 
 long double frameToComplexCoord(int x0, fractal& fract, long double origin) {
@@ -98,26 +56,89 @@ sf::Vector2<long double> screenToComplexCoords(sf::Vector2<int> mousePos, fracta
       );      
 }
 
+const int mapN = 2;
+sf::Color (*colormaps[mapN])(int i, int imax) = {
+      [](int i, int imax) -> sf::Color {
+            float x = (float)i / imax;
+            int c = x*255;
+
+            if (x >= 0.9) {
+                  float n = norm(0.9, 1, x);
+                  return sf::Color(d(0, 255, n), c, 255);
+            } else if (x > 0.2) {
+                  float n = norm(0.2, 0.9, x);
+                  return sf::Color(0, d(51, 229.5, n) , d(204, 255, n));
+            } else {
+                  float n = norm(0, 0.2, x);
+                  return sf::Color(d(0, 51, 1-n), d(0, 51, n), c*3 +51);
+            }
+      },
+      [](int i, int imax) -> sf::Color {
+            float x = (float)i/imax;
+            int c = x*255;
+
+            if (x >= 1) {
+                  return sf::Color(0, 0, 0);
+            } else if (x > 0.5) {
+                  return sf::Color(c, 255, c);
+            } else {
+                  return sf::Color(0, c*2, 0);
+            }
+      },
+};
+
+const long double euler = 2.71828182845904523536028l;
+const int escapeN = 3;
+int (*escapeTests[escapeN])(const long double cr, const long double ci, int imax, long double zr, long double zi) = {
+      [](const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) -> int { // standard mandelbrot set
+            long double ztmp;
+            int i = 0;
+
+            while (zr*zr + zi*zi < 4.0l and i < imax) {
+                  ztmp = zr;
+                  zr = zr*zr - zi*zi + cr;
+                  zi = ztmp*zi + zi*ztmp + ci;
+                  i++;
+            }     
+
+            return i;
+      },
+      [](const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) -> int { // the burning ship
+            long double ztmp;
+            int i = 0;
+
+            while (zr*zr + zi*zi < 4.0l and i < imax) {
+                  ztmp = zr;
+                  zr = zr*zr - zi*zi + cr;
+                  zi = abs(ztmp*zi*2) + ci;
+                  i++;
+            }     
+
+            return i;       
+      },
+      [](const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) -> int { // 
+            Complex c(cr, ci);
+            Complex z(zr, zi);
+            Complex one(1, 0);
+            Complex tmp;
+            int i = 0;
+
+            while (z.modulusSqrd() < 4.0l and i < imax) {
+                  tmp = z + c;
+                  z = one/(tmp*tmp*tmp);
+                  i++;
+            }     
+
+            return i;       
+      },
+};
+
 bool isMouseInFrame(sf::Vector2<int> mousePos, sf::Sprite& frame) {
       sf::Rect<int> bounds(frame.getGlobalBounds());
       return bounds.contains(mousePos);
 }
 
-int testStability(const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) {
-      long double ztmp;
-      int i = 0;
-
-      while (i < imax && zr*zr + zi*zi < 4.0l) {
-            ztmp = zr;
-            zr = zr*zr - zi*zi + cr;
-            zi = ztmp*zi + zi*ztmp + ci;
-            i++;
-      }     
-
-      return i; 
-}
-
-void render(fractal* fract, fractalType fract_type, sf::Image* image, int startRows, int endRows) {  
+void render(fractal* fract, fractalType fract_type, sf::Image* image, int startRows, int endRows, int mapn, int escapen) {  
       for (int screenY = startRows; screenY < endRows; screenY++) {
             long double pi = frameToComplexCoord(screenY, *fract, fract -> y);
 
@@ -125,15 +146,15 @@ void render(fractal* fract, fractalType fract_type, sf::Image* image, int startR
                   long double pr = frameToComplexCoord(screenX, *fract, fract -> x);
 
                   int i = fract_type == fractalType::mandelbrot ?
-                        testStability(pr, pi, fract -> imax) :
-                        testStability(fract -> zr, fract -> zi, fract -> imax, pr, pi);
+                        escapeTests[escapen](pr, pi, fract -> imax, 0.0l, 0.0l) :
+                        escapeTests[escapen](fract -> zr, fract -> zi, fract -> imax, pr, pi);
 
-                  image -> setPixel(screenX, screenY, colorPixel(i, fract -> imax));
+                  image -> setPixel(screenX, screenY, colormaps[mapn](i, fract -> imax));
             }
       }
 }
 
-void renderFractal(fractal& fract, fractalType type) {
+void renderFractal(fractal& fract, fractalType type, int mapn, int escapen) {
       sf::Image image;
 	image.create(fract.size, fract.size, sf::Color(0, 0, 0));
 
@@ -147,7 +168,7 @@ void renderFractal(fractal& fract, fractalType type) {
 			targetRows = fract.size;
 		}
 
-		threads[i] = std::thread(render, &fract, type, &image, i*rowsPerThread, targetRows);
+		threads[i] = std::thread(render, &fract, type, &image, i*rowsPerThread, targetRows, mapn, escapen);
 	}
 
 	for (int i = 0; i < THREAD_COUNT; i++) {
@@ -171,6 +192,9 @@ int main() {
 
       bool paused = false;
 
+      int colormap = 0;
+      int escapetest = 0;
+
       sf::RenderWindow window(sf::VideoMode(width, height),
 		"Mandelbrot Visualizer",
 		sf::Style::Close | sf::Style::Titlebar | sf::Style::Resize
@@ -186,7 +210,7 @@ int main() {
 
       // Initialize
       mandelbrot.frame.setPosition(width/2, 0);
-      renderFractal(mandelbrot, fractalType::mandelbrot);
+      renderFractal(mandelbrot, fractalType::mandelbrot, colormap, escapetest);
 
       fractal* activefractal = &mandelbrot;
 
@@ -197,14 +221,12 @@ int main() {
       while (window.isOpen()) {
             bool draw_all = false;
             bool draw = false;
-            bool inFocus = window.hasFocus();
+            // bsool inFocus = window.hasFocus();
             sf::Event event;
             mouseScreenPos0 = mouseScreenPos;
             mouseScreenPos = sf::Mouse::getPosition(window);
             
             sf::Vector2<long double> mousePlanePos = screenToComplexCoords(mouseScreenPos, activefractal? *activefractal : mandelbrot);
-
-            std::cout << mouseScreenPos.x << ", " << mouseScreenPos.y << "\n";
 
             if (paused == false) {
                   julia.zr = mousePlanePos.x;
@@ -260,6 +282,10 @@ int main() {
                                           paused = !paused;
                                           draw_all = true;
                                           break;
+                                    case Keyboard::Key::C:
+                                          colormap = (colormap+1)%mapN;
+                                          draw_all = true;
+                                          break;
                                     case Keyboard::Key::R:
                                           activefractal -> x = 0.0l;
                                           activefractal -> y = 0.0l;
@@ -277,6 +303,10 @@ int main() {
                                                 activefractal -> imax /= 1.1;
                                           draw = true;
                                           break;
+                                    case Keyboard::Key::V: 
+                                          escapetest = (escapetest+1)%escapeN;
+                                          draw_all = true;
+                                          break;
                                     default: break;
                               }   
                         } default: break;
@@ -284,9 +314,9 @@ int main() {
             }
 
             if (draw_all == true || (draw == true and activefractal == &mandelbrot)) 
-                  renderFractal(mandelbrot, fractalType::mandelbrot);
+                  renderFractal(mandelbrot, fractalType::mandelbrot, colormap, escapetest);
             if (draw_all == true || (draw == true and activefractal == &julia) || (mouseScreenPos != mouseScreenPos0 and paused == false))
-                  renderFractal(julia, fractalType::julia);
+                  renderFractal(julia, fractalType::julia, colormap, escapetest);
 
             // Render
             window.clear();
