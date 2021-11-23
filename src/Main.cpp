@@ -57,9 +57,10 @@ sf::Vector2<long double> screenToComplexCoords(sf::Vector2<int> mousePos, fracta
 }
 
 const int mapN = 2;
-sf::Color (*colormaps[mapN])(int i, int imax) = {
-      [](int i, int imax) -> sf::Color {
-            float x = (float)i / imax;
+sf::Color (*colormaps[mapN])(float i, int imax) = {
+      [](float i, int imax) -> sf::Color {
+            float x = i / imax;
+            x = x > 1 ? 1 : x;
             int c = x*255;
 
             if (x >= 0.9) {
@@ -73,8 +74,8 @@ sf::Color (*colormaps[mapN])(int i, int imax) = {
                   return sf::Color(d(0, 51, 1-n), d(0, 51, n), c*3 +51);
             }
       },
-      [](int i, int imax) -> sf::Color {
-            float x = (float)i/imax;
+      [](float i, int imax) -> sf::Color {
+            float x = i/imax;
             int c = x*255;
 
             if (x >= 1) {
@@ -89,34 +90,40 @@ sf::Color (*colormaps[mapN])(int i, int imax) = {
 
 const long double euler = 2.71828182845904523536028l;
 const int escapeN = 3;
-int (*escapeTests[escapeN])(const long double cr, const long double ci, int imax, long double zr, long double zi) = {
-      [](const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) -> int { // standard mandelbrot set
-            long double ztmp;
+float (*escapeTests[escapeN])(const long double cr, const long double ci, int imax, long double zr, long double zi) = {
+      [](const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) -> float { // standard mandelbrot set
             int i = 0;
 
-            while (zr*zr + zi*zi < 4.0l and i < imax) {
-                  ztmp = zr;
-                  zr = zr*zr - zi*zi + cr;
-                  zi = ztmp*zi + zi*ztmp + ci;
+            long double zr2 = zr*zr,
+                        zi2 = zi*zi;
+
+            while (zr2 + zi2 <= 4.0l and i < imax) {
+                  zi = 2*zr*zi + ci;
+                  zr = zr2 - zi2 + cr;
+                  zr2 = zr*zr;
+                  zi2 = zi*zi;
                   i++;
             }     
 
             return i;
       },
-      [](const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) -> int { // the burning ship
-            long double ztmp;
+      [](const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) -> float { // the burning ship
             int i = 0;
 
-            while (zr*zr + zi*zi < 4.0l and i < imax) {
-                  ztmp = zr;
-                  zr = zr*zr - zi*zi + cr;
-                  zi = abs(ztmp*zi*2) + ci;
+            long double zr2 = zr*zr,
+                        zi2 = zi*zi;
+
+            while (zr2 + zi2 < 4.0l and i < imax) {
+                  zi = abs(zr*zi*2) + ci;
+                  zr = zr2 - zi2 + cr;
+                  zr2 = zr*zr;
+                  zi2 = zi*zi;
                   i++;
             }     
 
             return i;       
       },
-      [](const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) -> int { // 
+      [](const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) -> float { // 
             Complex c(cr, ci);
             Complex z(zr, zi);
             Complex one(1, 0);
@@ -145,7 +152,7 @@ void render(fractal* fract, fractalType fract_type, sf::Image* image, int startR
             for (int screenX = 0; screenX < fract -> size; screenX++) {
                   long double pr = frameToComplexCoord(screenX, *fract, fract -> x);
 
-                  int i = fract_type == fractalType::mandelbrot ?
+                  float i = fract_type == fractalType::mandelbrot ?
                         escapeTests[escapen](pr, pi, fract -> imax, 0.0l, 0.0l) :
                         escapeTests[escapen](fract -> zr, fract -> zi, fract -> imax, pr, pi);
 
