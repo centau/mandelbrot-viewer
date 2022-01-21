@@ -7,3 +7,5 @@ A program that renders mandelbrot and julia sets.
 - Space - Freeze
 - C - Change colors
 - V - Change fractal
+
+An already built executable is located at `bin/Main.exe`
