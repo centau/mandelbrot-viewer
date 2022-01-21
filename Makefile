@@ -1,23 +1,37 @@
-all: build_release
+# Macros
+CC = g++
 
-build_run_release: build_release run_release 
-build_run_debug: build_debug run_debug
+INCLUDE_DIR = src/include
+BIN_DIR = bin
+LIB_DIR = src/lib
 
-build_release: compile link_release clean
-build_debug: compile link_debug clean
+HEADER_FILES = $(wildcard $(INCLUDE_DIR)/*.hpp)
+SRC_FILES = $(wildcard src/*.cpp)
+BIN_FILES = $(patsubst src/%.cpp,$(BIN_DIR)/%.o,$(SRC_FILES))
 
-compile:
-	g++ -I src/include -c src/Main.cpp -O3 -Wall -Wextra
+CFLAGS = -I $(INCLUDE_DIR) -L $(LIB_DIR) -l sfml-window -l sfml-system -l sfml-graphics -O3
 
-link_release:
-	g++ Main.o -o bin/Release/Main.exe -L src/lib/Release -l sfml-graphics -l sfml-window -l sfml-system -mwindows
-link_debug:
-	g++ Main.o -o bin/Debug/Main.exe -L src/lib/Debug -l sfml-graphics-d -l sfml-window-d -l sfml-system-d
+# Rules
+$(BIN_DIR)/%.o: src/%.cpp $(HEADER_FILES)
+	$(CC) -o $@ -c $< $(CFLAGS)
 
-run_release:
-	bin/Release/Main.exe
-run_debug:
-	bin/Debug/Main.exe
+build: Main.exe
+	@echo Compiled and linked!
 
+build_run: build
+	@echo ============================
+	@echo Executing program...
+	@echo ============================
+	@./bin/Main.exe
+	@echo ============================
+	@echo Execution complete!
+	@echo ============================
+
+Main.exe: $(BIN_FILES)
+	$(CC) -o bin/$@ $^ $(CFLAGS)
+
+.PHONY: clean
+
+# only works for cmd
 clean:
-	del *.o
+	del src\bin\*.o

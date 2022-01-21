@@ -92,9 +92,9 @@ const long double euler = 2.71828182845904523536028l;
 const int escapeN = 3;
 float (*escapeTests[escapeN])(const long double cr, const long double ci, int imax, long double zr, long double zi) = {
       [](const long double cr, const long double ci, int imax, long double zr = 0.0l, long double zi = 0.0l) -> float { // standard mandelbrot set
-            int i = 0;
+            register int i = 0;
 
-            long double zr2 = zr*zr,
+            register long double zr2 = zr*zr,
                         zi2 = zi*zi;
 
             while (zr2 + zi2 <= 4.0l and i < imax) {
@@ -197,7 +197,7 @@ int main() {
       int width = 1000;
       int height = 500;
 
-      bool paused = false;
+      bool paused = false;//
 
       int colormap = 0;
       int escapetest = 0;

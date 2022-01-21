@@ -2,8 +2,8 @@
 	"tasks": [
             {
                   "type": "shell",
-                  "label": "Build & Run Release",
-                  "command": "make build_run_release",
+                  "label": "Build & Run",
+                  "command": "make build_run",
 
                   "problemMatcher": ["$gcc"],
                   "group": {
@@ -15,12 +15,12 @@
                         "reveal": "always",
                   },
 
-                  "detail": "Builds and runs release"
+                  "detail": "Builds and runs program"
             },
             {
                   "type": "shell",
-                  "label": "Build & Run Debug",
-                  "command": "make build_run_debug",
+                  "label": "Build",
+                  "command": "make build",
 
                   "problemMatcher": ["$gcc"],
                   "group": {
@@ -32,47 +32,7 @@
                         "reveal": "always",
                   },
 
-                  "detail": "Builds and runs debug"
-            },
-            {
-                  "type": "shell",
-                  "label": "Build Release",
-                  "command": "make build_release",
-                  "args": [],
-                  "options": {
-                  },
-
-                  "problemMatcher": ["$gcc"],
-                  "group": {
-                        "kind": "build",
-                        "isDefault": true
-                  },
-
-                  "presentation": {
-                        "reveal": "always",
-                  },
-
-                  "detail": "Builds release"
-            },
-            {
-                  "type": "shell",
-                  "label": "Build Debug",
-                  "command": "make build_debug",
-                  "args": [],
-                  "options": {
-                  },
-
-                  "problemMatcher": ["$gcc"],
-                  "group": {
-                        "kind": "build",
-                        "isDefault": true
-                  },
-
-                  "presentation": {
-                        "reveal": "always",
-                  },
-
-                  "detail": "Builds debug"
+                  "detail": "Builds program"
             },
       ],
 
