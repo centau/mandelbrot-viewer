@@ -1,4 +1,9 @@
-Template for 64bit SFML programs.
+A program that renders mandelbrot and julia sets.
 
-Make sure you have mingw64/bin defined in Path in environment variables as well as a Make exe.
-
+## Controls:
+- Mouse Click - Focus
+- Scroll Wheel - Zoom
+- Z, X - Change definition
+- Space - Freeze
+- C - Change colors
+- V - Change fractal
