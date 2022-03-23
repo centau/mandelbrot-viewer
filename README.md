@@ -1,4 +1,4 @@
-A program that renders mandelbrot and julia sets.
+C++ SFML program that renders mandelbrots and julia set fractals.
 
 ![image](https://user-images.githubusercontent.com/83140718/150577140-372d3036-b4dc-4695-ba97-148fdc945336.png)
 
